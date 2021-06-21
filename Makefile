@@ -57,8 +57,25 @@ clust: mkvol
 	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes,consistency=delegated \
 		-it $(IMAGE):$(VERSION) clust $(DBNAME) $(CLUSTHOSTS)
 
+.PHONY: uclust
+uclust: docker-compose.yaml
+	$(DOCKER) compose up -d
+
+.PHONY: sclust
+sclust: docker-compose.yaml 
+	$(DOCKER) compose down
+
+.PHONEY: lclust
+lclust: 
+	./client.sh -l -d $(DBNAME) -n $(CLUSTHOSTS)
+
+.PHONY: client 
+client:
+	./client.sh -d $(DBNAME) -n $(CLUSTHOSTS)
+
 .PHONY: clean
-clean:
+clean: sclust
+	rm -rf volumes
 	docker rm -f $(CONTAINER)
 
 .PHONY: logs

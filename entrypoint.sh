@@ -138,8 +138,7 @@ run_client() {
 	else
 		DBNAME="$1"
 	fi
-	ping "$2"
-	#    $CDB2SQL "$DBNAME"
+	"$CDB2SQL" "$DBNAME"
 }
 
 case "$1" in

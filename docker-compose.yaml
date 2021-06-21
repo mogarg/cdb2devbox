@@ -3,20 +3,21 @@ services:
   comdb2-node1:
     container_name: node1
     hostname: node1 
-    image: bloomberg/comdb2-dev:latest
+    image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg
     command: ["run", "mogargdb"]
     volumes:
       - ./volumes/bin:/opt/bb/bin
-      - ./volumes/node2-dbs:/home/heisengarg/dbs
+      - ./volumes/node1-dbs:/home/heisengarg/dbs
     networks:
       - cluster-net
+    restart: unless-stopped
     cap_add:
       - ALL
   comdb2-node2:
     container_name: node2
     hostname: node2
-    image: bloomberg/comdb2-dev:latest
+    image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg
     command: ["run", "mogargdb"]
     volumes:
@@ -24,12 +25,13 @@ services:
       - ./volumes/node2-dbs:/home/heisengarg/dbs
     networks:
       - cluster-net
+    restart: unless-stopped
     cap_add:
       - ALL
   comdb2-node3:
     container_name: node3
     hostname: node3
-    image: bloomberg/comdb2-dev:latest
+    image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg
     command: ["run", "mogargdb"]
     volumes:
@@ -37,6 +39,7 @@ services:
       - ./volumes/node3-dbs:/home/heisengarg/dbs
     networks:
       - cluster-net
+    restart: unless-stopped
     cap_add:
       - ALL
 
