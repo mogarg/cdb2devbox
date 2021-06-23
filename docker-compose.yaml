@@ -11,6 +11,7 @@ services:
       - ./volumes/node1-dbs:/home/heisengarg/dbs
     networks:
       - cluster-net
+      - client-net
     restart: unless-stopped
     cap_add:
       - ALL
@@ -25,6 +26,7 @@ services:
       - ./volumes/node2-dbs:/home/heisengarg/dbs
     networks:
       - cluster-net
+      - client-net
     restart: unless-stopped
     cap_add:
       - ALL
@@ -39,7 +41,22 @@ services:
       - ./volumes/node3-dbs:/home/heisengarg/dbs
     networks:
       - cluster-net
+      - client-net
     restart: unless-stopped
+    cap_add:
+      - ALL
+  comdb2-client:
+    container_name: client
+    hostname: client
+    image: heisengarg/comdb2-dev:latest
+    working_dir: /home/heisengarg/src
+    command: ["watch", "uptime"]
+    volumes:
+      - ../.:/home/heisengarg/src
+      - ./volumes/bin:/opt/bb/bin
+      - ./mogargdb.cfg:/opt/bb/etc/cdb2/config.d/mogargdb.cfg
+    networks:
+      - client-net
     cap_add:
       - ALL
 
@@ -52,3 +69,11 @@ networks:
       config:
       - subnet: 172.16.238.0/24
       - subnet: 2001:3984:3989::/64
+  client-net:
+    driver: bridge 
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.16.239.0/24
+      - subnet: 2001:3984:3990::/64

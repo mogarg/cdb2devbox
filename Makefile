@@ -63,7 +63,11 @@ uclust: docker-compose.yaml
 
 .PHONY: sclust
 sclust: docker-compose.yaml 
-	$(DOCKER) compose down
+	$(DOCKER) compose stop
+
+.PHONY: dclust
+dclust: docker-compose.yaml 
+	$(DOCKER) compose down --remove-orphans 
 
 .PHONEY: lclust
 lclust: 
