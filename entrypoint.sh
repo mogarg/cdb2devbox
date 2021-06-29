@@ -54,6 +54,7 @@ new_db() {
 }
 
 clusterize() {
+	# <dbname> <hosts> <skip_copy_db=1>
 	if [ -z "$1" ]; then
 		echo "no dbname passed using testdb"
 	else
@@ -65,20 +66,33 @@ clusterize() {
 		exit 1
 	fi
 
+	IFS=',' read -rA hosts <<<"$2"
+
+	[[ ! -d "$CLUSTVOLDIR" ]] && echo "volumes directory not found. Forgot to mount?" && exit 2
+	[[ ! -w "$CLUSTVOLDIR" ]] && sudo chown -R $(whoami) "$CLUSTVOLDIR"
+
+	echo "Copying binary files to $CLUSTVOLDIR/bin"
+	for file in $(ls /opt/bb/bin/); do
+		if [ -x "$CLUSTVOLDIR/bin" ]; then
+			[[ -n "$(diff /opt/bb/bin/$file $CLUSTVOLDIR/bin/$file)" ]] && echo "$file is changed" || echo "latest $file present"
+		else
+			echo "New binary $file"
+		fi
+	done
+
+	cp -R /opt/bb/bin "$CLUSTVOLDIR/bin"
+
+	if [[ "$3" -eq "1" ]]; then
+		exit 0
+	fi
+
 	if ! CPCOMDB2="$(command -v copycomdb2)"; then
 		echo "Failed to find comdb2"
 		exit 1
 	fi
 
-	IFS=',' read -rA hosts <<<"$2"
-
 	echo "cluster nodes $(IFS=" " echo "${hosts[@]}")
 " >>"$DBSDIR/$DBNAME/$DBNAME.lrl"
-
-	[[ ! -d "$CLUSTVOLDIR" ]] && echo "volumes directory not found. Forgot to mount?" && exit 2
-	[[ ! -w "$CLUSTVOLDIR" ]] && sudo chown -R $(whoami) "$CLUSTVOLDIR"
-
-	cp -R /opt/bb/bin "$CLUSTVOLDIR/bin"
 
 	for host in ${hosts[@]}; do
 		$CPCOMDB2 "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME"
@@ -172,6 +186,10 @@ client)
 clust)
 	shift
 	clusterize $*
+	;;
+clustbin)
+	shift
+	clusterize $* 1
 	;;
 *)
 	exec "$@"

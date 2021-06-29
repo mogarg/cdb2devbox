@@ -22,7 +22,7 @@ mkvol:
 	mkdir -p volumes
 
 .PHONY: runc
-runc: mkvol clean buildi
+runc: clean mkvol buildi
 	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source="$(SRCDIR)",target=$(CNTHOME)/comdb2,consistency=delegated \
@@ -57,7 +57,14 @@ clust: mkvol
 	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes,consistency=delegated \
 		-it $(IMAGE):$(VERSION) clust $(DBNAME) $(CLUSTHOSTS)
 
-.PHONY: uclust
+.PHONY: clustbin
+clustbin: mkvol 
+	$(DOCKER) run -it --mount type=volume,source=comdb2-dbs,target=$(CNTHOME)/dbs \
+	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
+	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes,consistency=delegated \
+		-it $(IMAGE):$(VERSION) clustbin $(DBNAME) $(CLUSTHOSTS)
+
+.PHONY: clustbin uclust
 uclust: docker-compose.yaml
 	$(DOCKER) compose up -d
 
