@@ -49,6 +49,8 @@ new_db() {
 
 	# make a directory for logs
 	sudo mkdir -p /opt/bb/var/log/cdb2 && sudo chown -R $(whoami) /opt/bb/
+	sudo mkdir -p "$DBSDIR/$DBNAME" && sudo chown -R $(whoami) "$DBSDIR/$DBNAME"
+
 	$COMDB2 --create --dir "$DBSDIR/$DBNAME" "$DBNAME"
 	echo "logmsg.level debug" >>"$DBSDIR/$DBNAME/$DBNAME.lrl"
 }

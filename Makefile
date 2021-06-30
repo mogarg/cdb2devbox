@@ -22,7 +22,7 @@ mkvol:
 	mkdir -p volumes
 
 .PHONY: runc
-runc: mkvol clean buildi
+runc: clean mkvol buildi
 	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source="$(SRCDIR)",target=$(CNTHOME)/comdb2,consistency=delegated \
