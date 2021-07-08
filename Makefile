@@ -4,10 +4,12 @@ IMAGE="heisengarg/comdb2-dev"
 VERSION="latest"
 CONTAINER="comdb2dev"
 CNTHOME="/home/heisengarg"
+CNTLRLOPTSLOC="$(CNTHOME)/lrl.options"
 
 # --- HOST --- #
 SRCDIR="$(shell pwd)/.."
 LCLVOLDIR="$(shell pwd)/volumes"
+LRLOPTSFILE="$(shell pwd)/lrl.options"
 
 # --- DB --- #
 CLUSTHOSTS="node1,node2,node3"
@@ -15,7 +17,7 @@ DBNAME="mogargdb"
 
 .PHONY: buildi
 buildi: Dockerfile
-	$(DOCKER) build -t $(IMAGE):$(VERSION) .
+	$(DOCKER) build --pull -t $(IMAGE):$(VERSION) .
 
 .PHONY: mkvol
 mkvol:
@@ -24,8 +26,20 @@ mkvol:
 .PHONY: runc
 runc: clean mkvol buildi
 	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
+		--cap-add=all \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source="$(SRCDIR)",target=$(CNTHOME)/comdb2,consistency=delegated \
+	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes \
+		-w $(CNTHOME) --hostname=$(CONTAINER) --name=$(CONTAINER)\
+	   	 -it $(IMAGE):$(VERSION) shell 
+
+.PHONY: runs
+runs: clean mkvol
+	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
+		--privileged \
+		--mount type=volume,source=comdb2-src,target=$(CNTHOME)/comdb2 \
+	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
+	   	--mount type=bind,source="$(HOME)/.ssh",target=$(CNTHOME)/.ssh,consistency=cached \
 	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes \
 		-w $(CNTHOME) --hostname=$(CONTAINER) --name=$(CONTAINER)\
 	   	 -it $(IMAGE):$(VERSION) shell 
@@ -33,12 +47,15 @@ runc: clean mkvol buildi
 .PHONY: newdb
 newdb:
 	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target=$(CNTHOME)/dbs \
+		-e LRLFILEOPTSPATH=$(CNTLRLOPTSLOC) \
+		--mount type=bind,source=$(LRLOPTSFILE),target=$(CNTLRLOPTSLOC),readonly \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
-		-it $(IMAGE):$(VERSION) db $(DBNAME) 
+		-w $(CNTHOME) -it $(IMAGE):$(VERSION) db $(DBNAME) 
 
 .PHONY: run
 run: clean
 	$(DOCKER) run -p 5105:5105 -p 19000:19000 \
+		--cap-add=all \
 		--mount type=volume,source=comdb2-dbs,target=$(CNTHOME)/dbs \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 		--name=$(CONTAINER) --hostname=$(CONTAINER) \
@@ -64,8 +81,8 @@ clustbin: mkvol
 	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes,consistency=delegated \
 		-it $(IMAGE):$(VERSION) clustbin $(DBNAME) $(CLUSTHOSTS)
 
-.PHONY: clustbin uclust
-uclust: docker-compose.yaml
+.PHONY: uclust
+uclust: clustbin docker-compose.yaml
 	$(DOCKER) compose up -d
 
 .PHONY: sclust

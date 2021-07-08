@@ -16,7 +16,8 @@ CLUSTVOLDIR="$HOMEDIR/volumes/" # directory to copy the database to when buildin
 DBNAME="testdb"
 
 build() {
-	mkdir -p build && cd build && cmake -GNinja ..
+	mkdir -p build && cd build &&
+		cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
 	ninja && sudo ninja install
 }
 
@@ -50,7 +51,17 @@ new_db() {
 	# make a directory for logs
 	sudo mkdir -p /opt/bb/var/log/cdb2 && sudo chown -R $(whoami) /opt/bb/
 	$COMDB2 --create --dir "$DBSDIR/$DBNAME" "$DBNAME"
-	echo "logmsg.level debug" >>"$DBSDIR/$DBNAME/$DBNAME.lrl"
+
+	# Add extra lrl options if we want by copying the lrl.options file
+	# , and setting the $LRLFILEOPTSPATH file path
+	if [ -n "$LRLFILEOPTSPATH" ]; then
+		if [ -e "$LRLFILEOPTSPATH" ]; then
+			echo "Appending lrl.options to "$DBNAME".lrl"
+			cat "$LRLFILEOPTSPATH" >>"$DBSDIR/$DBNAME/$DBNAME.lrl"
+		else
+			echo "An lrl.options file path: $LRLFILEOPTSPATH given but file doesn't exist"
+		fi
+	fi
 }
 
 clusterize() {
@@ -80,6 +91,7 @@ clusterize() {
 		fi
 	done
 
+	[[ -d "$CLUSTVOLDIR/bin" ]] && rm -r "$CLUSTVOLDIR/bin"
 	cp -R /opt/bb/bin "$CLUSTVOLDIR/bin"
 
 	if [[ "$3" -eq "1" ]]; then
@@ -95,6 +107,7 @@ clusterize() {
 " >>"$DBSDIR/$DBNAME/$DBNAME.lrl"
 
 	for host in ${hosts[@]}; do
+		echo "Copying $DBNAME from $DBSDIR/$DBNAME/$DBNAME.lrl to $CLUSTVOLDIR/$host-dbs/$DBNAME"
 		$CPCOMDB2 "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME"
 		# Hack: I don't want the lrl dir path modified to $HOME/volumes/node1-dbs/dbname etc since
 		# $HOME/volumes/node1-dbs is just a mount and this would be mounted to $HOME/dbs/dbname

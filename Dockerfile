@@ -2,6 +2,8 @@ ARG VARIANT="latest"
 ARG IMAGE="heisengarg/devbox"
 ARG USER="heisengarg"
 
+FROM quay.io/iovisor/bpftrace:latest as bpfsource
+
 FROM ${IMAGE}:${VARIANT}
 
 WORKDIR /home/${USER}/comdb2
@@ -34,6 +36,8 @@ RUN sudo apt-get update && sudo apt-get -y install --no-install-recommends \
     figlet               \
     iputils-ping         \
     net-tools
+
+COPY --from=bpfsource /usr/bin/bpftrace /usr/bin/bpftrace
 
 EXPOSE 5105 
 COPY ./entrypoint.sh /usr/local/bin/
