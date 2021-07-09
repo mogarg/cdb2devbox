@@ -54,7 +54,6 @@ services:
     volumes:
       - ../.:/home/heisengarg/src
       - ./volumes/bin:/opt/bb/bin
-      - ./mogargdb.cfg:/opt/bb/etc/cdb2/config.d/mogargdb.cfg
     networks:
       - client-net
     cap_add:
