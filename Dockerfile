@@ -4,9 +4,6 @@ ARG USER="heisengarg"
 
 FROM quay.io/iovisor/bpftrace:latest as bpfsource
 
-ARG VARIANT="latest"
-ARG IMAGE="heisengarg/devbox"
-
 FROM ${IMAGE}:${VARIANT} as perfsource
 
 USER root
