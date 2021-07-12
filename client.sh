@@ -10,21 +10,28 @@ run_client() {
 	$DOCKER exec -it "$1" cdb2sql "$2"
 }
 
+# TODO: At some point, I should create one function which runs a given command
+# on all host panes in a new window. For now, I'll just duplication would do
+
 open_tmux() {
 	# <hostnames> <dbname>
 	IFS=',' read -rA HOSTS <<<$1
 	DBNAME="$2"
 	TMSESS="$DBNAME-cluster"
-	WINDOW="$DBNAME"
+	WINDOW="clients"
 	$TMUX has-session -t "$TMSESS" 2>/dev/null && $TMUX kill-session -t "$TMSESS"
 	$TMUX new -d -c "$(pwd)" -s "$TMSESS" -n "$WINDOW"
 	$TMUX send-keys -t "$TMSESS:$WINDOW" "./client.sh -a -d '$2' -n ${HOSTS[1]}" Enter
 	for host in "${HOSTS[@]:1}"; do
 		$TMUX split-window
 		$TMUX send-keys "./client.sh -a -d '$2' -n '$host'" Enter
-		$TMUX select-layout tiled
 	done
+	$TMUX split-window
+	$TMUX send-keys "$DOCKER exec -it client zsh" Enter
+	$TMUX select-layout tiled
+
 	open_logs "$1" "$2"
+	open_term "$1" "$2"
 	$TMUX a -t "$TMSESS"
 }
 
@@ -32,7 +39,7 @@ open_logs() {
 	IFS=',' read -rA HOSTS <<<$1
 	DBNAME="$2"
 	TMSESS="$DBNAME-cluster"
-	WINDOW="$DBNAME-logs"
+	WINDOW="logs"
 	if $TMUX has-session -t "$TMSESS" 2>/dev/null; then
 		$TMUX new-window -c "$(pwd)" -t "$TMSESS" -n "$WINDOW"
 	else
@@ -44,7 +51,26 @@ open_logs() {
 		$TMUX send-keys "$DOCKER compose logs -f comdb2-$host" Enter
 		$TMUX select-layout tiled
 	done
-	$TMUX a -t "$TMSESS:$DBNAME-logs"
+#	$TMUX a -t "$TMSESS:$WINDOW"
+}
+
+open_term() {
+	IFS=',' read -rA HOSTS <<<$1
+	DBNAME="$2"
+	TMSESS="$DBNAME-cluster"
+	WINDOW="shell"
+	if $TMUX has-session -t "$TMSESS" 2>/dev/null; then
+		$TMUX new-window -c "$(pwd)" -t "$TMSESS" -n "$WINDOW"
+	else
+		$TMUX new -d -c "$(pwd)" -s "$TMSESS" -n "$WINDOW"
+	fi
+	$TMUX send-keys -t "$TMSESS:$WINDOW" "$DOCKER exec -it "${HOSTS[1]}" /bin/zsh" Enter
+	for host in "${HOSTS[@]:1}"; do
+		$TMUX split-window
+		$TMUX send-keys "$DOCKER exec -it "$host" /bin/zsh" Enter
+		$TMUX select-layout tiled
+	done
+#	$TMUX a -t "$TMSESS:$WINDOW"
 }
 
 opt_attach=0

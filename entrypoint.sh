@@ -16,7 +16,8 @@ CLUSTVOLDIR="$HOMEDIR/volumes/" # directory to copy the database to when buildin
 DBNAME="testdb"
 
 build() {
-	mkdir -p build && cd build && cmake -GNinja ..
+	mkdir -p build && cd build &&
+		cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
 	ninja && sudo ninja install
 }
 
@@ -49,10 +50,24 @@ new_db() {
 
 	# make a directory for logs
 	sudo mkdir -p /opt/bb/var/log/cdb2 && sudo chown -R $(whoami) /opt/bb/
+	sudo mkdir -p "$DBSDIR/$DBNAME" && sudo chown -R $(whoami) "$DBSDIR/$DBNAME"
+
 	$COMDB2 --create --dir "$DBSDIR/$DBNAME" "$DBNAME"
+
+	# Add extra lrl options if we want by copying the lrl.options file
+	# , and setting the $LRLFILEOPTSPATH file path
+	if [ -n "$LRLFILEOPTSPATH" ]; then
+		if [ -e "$LRLFILEOPTSPATH" ]; then
+			echo "Appending lrl.options to "$DBNAME".lrl"
+			cat "$LRLFILEOPTSPATH" >>"$DBSDIR/$DBNAME/$DBNAME.lrl"
+		else
+			echo "An lrl.options file path: $LRLFILEOPTSPATH given but file doesn't exist"
+		fi
+	fi
 }
 
 clusterize() {
+	# <dbname> <hosts> <skip_copy_db=1>
 	if [ -z "$1" ]; then
 		echo "no dbname passed using testdb"
 	else
@@ -64,22 +79,37 @@ clusterize() {
 		exit 1
 	fi
 
+	IFS=',' read -rA hosts <<<"$2"
+
+	[[ ! -d "$CLUSTVOLDIR" ]] && echo "volumes directory not found. Forgot to mount?" && exit 2
+	[[ ! -w "$CLUSTVOLDIR" ]] && sudo chown -R $(whoami) "$CLUSTVOLDIR"
+
+	echo "Copying binary files to $CLUSTVOLDIR/bin"
+	for file in $(ls /opt/bb/bin/); do
+		if [ -x "$CLUSTVOLDIR/bin" ]; then
+			[[ -n "$(diff /opt/bb/bin/$file $CLUSTVOLDIR/bin/$file)" ]] && echo "$file is changed" || echo "latest $file present"
+		else
+			echo "New binary $file"
+		fi
+	done
+
+	[[ -d "$CLUSTVOLDIR/bin" ]] && rm -r "$CLUSTVOLDIR/bin"
+	cp -R /opt/bb/bin "$CLUSTVOLDIR/bin"
+
+	if [[ "$3" -eq "1" ]]; then
+		exit 0
+	fi
+
 	if ! CPCOMDB2="$(command -v copycomdb2)"; then
 		echo "Failed to find comdb2"
 		exit 1
 	fi
 
-	IFS=',' read -rA hosts <<<"$2"
-
 	echo "cluster nodes $(IFS=" " echo "${hosts[@]}")
 " >>"$DBSDIR/$DBNAME/$DBNAME.lrl"
 
-	[[ ! -d "$CLUSTVOLDIR" ]] && echo "volumes directory not found. Forgot to mount?" && exit 2
-	[[ ! -w "$CLUSTVOLDIR" ]] && sudo chown -R $(whoami) "$CLUSTVOLDIR"
-
-	cp -R /opt/bb/bin "$CLUSTVOLDIR/bin"
-
 	for host in ${hosts[@]}; do
+		echo "Copying $DBNAME from $DBSDIR/$DBNAME/$DBNAME.lrl to $CLUSTVOLDIR/$host-dbs/$DBNAME"
 		$CPCOMDB2 "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME"
 		# Hack: I don't want the lrl dir path modified to $HOME/volumes/node1-dbs/dbname etc since
 		# $HOME/volumes/node1-dbs is just a mount and this would be mounted to $HOME/dbs/dbname
@@ -171,6 +201,10 @@ client)
 clust)
 	shift
 	clusterize $*
+	;;
+clustbin)
+	shift
+	clusterize $* 1
 	;;
 *)
 	exec "$@"
