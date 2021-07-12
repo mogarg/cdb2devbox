@@ -108,12 +108,22 @@ clusterize() {
 	echo "cluster nodes $(IFS=" " echo "${hosts[@]}")
 " >>"$DBSDIR/$DBNAME/$DBNAME.lrl"
 
+	declare -a COPYINGPIDS
+
 	for host in ${hosts[@]}; do
-		echo "Copying $DBNAME from $DBSDIR/$DBNAME/$DBNAME.lrl to $CLUSTVOLDIR/$host-dbs/$DBNAME"
-		$CPCOMDB2 "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME"
-		# Hack: I don't want the lrl dir path modified to $HOME/volumes/node1-dbs/dbname etc since
-		# $HOME/volumes/node1-dbs is just a mount and this would be mounted to $HOME/dbs/dbname
-		cp "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME/$DBNAME.lrl"
+		{
+			echo "Copying $DBNAME from $DBSDIR/$DBNAME/$DBNAME.lrl to $CLUSTVOLDIR/$host-dbs/$DBNAME"
+			$CPCOMDB2 "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME"
+			# Hack: I don't want the lrl dir path modified to $HOME/volumes/node1-dbs/dbname etc since
+			# $HOME/volumes/node1-dbs is just a mount and this would be mounted to $HOME/dbs/dbname
+			cp "$DBSDIR/$DBNAME/$DBNAME.lrl" "$CLUSTVOLDIR/$host-dbs/$DBNAME/$DBNAME.lrl"
+		} &
+		COPYINGPIDS+=($!)
+	done
+
+	for pid in ${COPYINGPIDS[@]}; do
+		wait $pid
+		sleep 0.5
 	done
 }
 
