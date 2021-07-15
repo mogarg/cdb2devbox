@@ -182,7 +182,7 @@ run_client() {
 }
 
 distribute_ssh_keys() {
-    keep_running=0
+	keep_running=0
 
 	if [ -z "$1" ]; then
 		echo "No hosts passed. Pass hosts as mach1,mach2,..,machn"
@@ -191,9 +191,9 @@ distribute_ssh_keys() {
 
 	IFS=',' read -rA hosts <<<"$1"
 
-    if [ -n "$2" ]; then 
-        keep_running=1;
-    fi 
+	if [ -n "$2" ]; then
+		keep_running=1
+	fi
 
 	KEYLOC="$HOMEDIR/.ssh"
 	KEYFILE="id_clust"
@@ -212,12 +212,12 @@ EOF
 		if [ "$(sudo ssh -i $KEYLOC/$KEYFILE -o StrictHostKeyChecking=no heisengarg@"$host" hostname)" != $host ]; then
 			echo "Couldn't reach out to $host" >&2
 			exit 1
-        else
-            echo "Success ssh'ing to $host"
+		else
+			echo "Success ssh'ing to $host"
 		fi
 	done
 
-    [[ "$keep_running" != 0 ]] && watch uptime
+	[[ "$keep_running" != 0 ]] && watch uptime
 }
 
 sudo service ssh restart
