@@ -10,10 +10,17 @@ set -e
 #
 # The binding is only relevant for building
 
-HOMEDIR="/home/heisengarg/"
+USER="heisengarg"
+HOMEDIR="/home/$USER/"
 DBSDIR="$HOMEDIR/dbs/"
 CLUSTVOLDIR="$HOMEDIR/volumes/" # directory to copy the database to when building a cluster
 DBNAME="testdb"
+
+# Environment for ssh
+# host password for the containers
+PASSWD="docker"
+KEYLOC="$HOMEDIR/.ssh"
+KEYFILE="id_clust"
 
 build() {
 	mkdir -p build && cd build &&
@@ -195,13 +202,10 @@ distribute_ssh_keys() {
 		keep_running=1
 	fi
 
-	KEYLOC="$HOMEDIR/.ssh"
-	KEYFILE="id_clust"
-
 	mkdir -p ~/.ssh && chmod 755 ~/.ssh
 	ssh-keygen -b 2048 -t rsa -f "$KEYLOC/$KEYFILE" -q -N ""
 	for node in node1 node2 node3; do
-		sshpass -p "docker" sudo ssh-copy-id -o StrictHostKeyChecking=no -i "$KEYLOC/$KEYFILE" heisengarg@"$node"
+		sshpass -p "$PASSWD" sudo ssh-copy-id -o StrictHostKeyChecking=no -i "$KEYLOC/$KEYFILE" heisengarg@"$node"
 	done
 
 	cat >>"$KEYLOC/config" <<EOF
@@ -209,7 +213,7 @@ IdentityFile $KEYLOC/$KEYFILE
 EOF
 
 	for host in ${hosts[@]}; do
-		if [ "$(sudo ssh -i $KEYLOC/$KEYFILE -o StrictHostKeyChecking=no heisengarg@"$host" hostname)" != $host ]; then
+		if [ "$(sudo ssh -i $KEYLOC/$KEYFILE -o StrictHostKeyChecking=no $USER@"$host" hostname)" != $host ]; then
 			echo "Couldn't reach out to $host" >&2
 			exit 1
 		else
