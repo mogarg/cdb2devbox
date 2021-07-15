@@ -102,8 +102,7 @@ client:
 	./client.sh -d $(DBNAME) -n $(CLUSTHOSTS)
 
 .PHONY: clean
-clean: sclust
-	rm -rf volumes
+clean:
 	docker rm -f $(CONTAINER)
 
 .PHONY: logs

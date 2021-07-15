@@ -49,10 +49,13 @@ RUN sudo apt-get update && sudo apt-get -y install --no-install-recommends \
     cscope               \
     figlet               \
     iputils-ping         \
-    net-tools
+    net-tools            \
+    sshpass
 
 COPY --from=bpfsource /usr/bin/bpftrace /usr/bin/bpftrace
 COPY --from=perfsource /home/heisengarg/linux-5.10.25/tools/perf/perf /usr/bin/perf
+
+RUN sudo service ssh restart 
 
 EXPOSE 5105 
 COPY ./entrypoint.sh /usr/local/bin/

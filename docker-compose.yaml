@@ -50,14 +50,20 @@ services:
     hostname: client
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg/src
-    command: ["watch", "uptime"]
+    command: ["diskeys", "node1,node2,node3"]
+    environment:
+     - CLUSTER="node1 node2 node3"
     volumes:
-      - ../.:/home/heisengarg/src
+      - comdb2-src:/home/heisengarg/src
       - ./volumes/bin:/opt/bb/bin
     networks:
       - client-net
     cap_add:
       - ALL
+
+volumes:
+  comdb2-src:
+    external: true
 
 networks:
   cluster-net:
