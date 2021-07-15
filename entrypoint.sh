@@ -181,6 +181,47 @@ run_client() {
 	"$CDB2SQL" "$DBNAME"
 }
 
+distribute_ssh_keys() {
+    keep_running=0
+
+	if [ -z "$1" ]; then
+		echo "No hosts passed. Pass hosts as mach1,mach2,..,machn"
+		exit 1
+	fi
+
+	IFS=',' read -rA hosts <<<"$1"
+
+    if [ -n "$2" ]; then 
+        keep_running=1;
+    fi 
+
+	KEYLOC="$HOMEDIR/.ssh"
+	KEYFILE="id_clust"
+
+	mkdir -p ~/.ssh && chmod 755 ~/.ssh
+	ssh-keygen -b 2048 -t rsa -f "$KEYLOC/$KEYFILE" -q -N ""
+	for node in node1 node2 node3; do
+		sshpass -p "docker" sudo ssh-copy-id -o StrictHostKeyChecking=no -i "$KEYLOC/$KEYFILE" heisengarg@"$node"
+	done
+
+	cat >>"$KEYLOC/config" <<EOF
+IdentityFile $KEYLOC/$KEYFILE
+EOF
+
+	for host in ${hosts[@]}; do
+		if [ "$(sudo ssh -i $KEYLOC/$KEYFILE -o StrictHostKeyChecking=no heisengarg@"$host" hostname)" != $host ]; then
+			echo "Couldn't reach out to $host" >&2
+			exit 1
+        else
+            echo "Success ssh'ing to $host"
+		fi
+	done
+
+    [[ "$keep_running" != 0 ]] && watch uptime
+}
+
+sudo service ssh restart
+
 case "$1" in
 build)
 	build
@@ -215,6 +256,10 @@ clust)
 clustbin)
 	shift
 	clusterize $* 1
+	;;
+diskeys)
+	shift
+	distribute_ssh_keys $* 1
 	;;
 *)
 	exec "$@"
