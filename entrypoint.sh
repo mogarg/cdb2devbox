@@ -202,15 +202,22 @@ distribute_ssh_keys() {
 		keep_running=1
 	fi
 
-	mkdir -p ~/.ssh && chmod 755 ~/.ssh
-	ssh-keygen -b 2048 -t rsa -f "$KEYLOC/$KEYFILE" -q -N ""
-	for node in node1 node2 node3; do
-		sshpass -p "$PASSWD" sudo ssh-copy-id -o StrictHostKeyChecking=no -i "$KEYLOC/$KEYFILE" heisengarg@"$node"
-	done
+	if [ -e "$KEYLOC/$KEYFILE" ] && [ -e "$KEYLOC/$KEYFILE.pub" ]; then
+		# Restarting from a stopped container
+		# No need to run again
+		echo "$KEYLOC already exists."
+	else
+		ssh-keygen -b 2048 -t rsa -f "$KEYLOC/$KEYFILE" -q -N ""
 
-	cat >>"$KEYLOC/config" <<EOF
+		for host in ${hosts[@]}; do
+			echo "$USER"
+			sshpass -p "$PASSWD" ssh-copy-id -o StrictHostKeyChecking=no -i "$KEYLOC/$KEYFILE" "$USER"@"$host"
+		done
+
+		cat >>"$KEYLOC/config" <<EOF
 IdentityFile $KEYLOC/$KEYFILE
 EOF
+	fi
 
 	for host in ${hosts[@]}; do
 		if [ "$(sudo ssh -i $KEYLOC/$KEYFILE -o StrictHostKeyChecking=no $USER@"$host" hostname)" != $host ]; then
