@@ -231,7 +231,7 @@ EOF
 	[[ "$keep_running" != 0 ]] && watch uptime
 }
 
-sudo service ssh restart
+sudo service ssh restart 2>&1 >/dev/null
 
 case "$1" in
 build)
