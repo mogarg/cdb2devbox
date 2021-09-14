@@ -9,6 +9,7 @@ services:
     volumes:
       - ./volumes/bin:/opt/bb/bin
       - ./volumes/node1-dbs:/home/heisengarg/dbs
+      - ./volumes/node1-ssh:/home/heisengarg/.ssh
     networks:
       - cluster-net
       - client-net
@@ -24,6 +25,7 @@ services:
     volumes:
       - ./volumes/bin:/opt/bb/bin
       - ./volumes/node2-dbs:/home/heisengarg/dbs
+      - ./volumes/node2-ssh:/home/heisengarg/.ssh
     networks:
       - cluster-net
       - client-net
@@ -39,6 +41,7 @@ services:
     volumes:
       - ./volumes/bin:/opt/bb/bin
       - ./volumes/node3-dbs:/home/heisengarg/dbs
+      - ./volumes/node3-ssh:/home/heisengarg/.ssh
     networks:
       - cluster-net
       - client-net
@@ -56,6 +59,7 @@ services:
     volumes:
       - comdb2-src:/home/heisengarg/src
       - ./volumes/bin:/opt/bb/bin
+      - ./volumes/client-ssh:/home/heisengarg/.ssh
     networks:
       - client-net
     cap_add:
@@ -80,5 +84,5 @@ networks:
     ipam:
       driver: default
       config:
-      - subnet: 172.16.239.0/24
+      - subnet: 173.16.239.0/24
       - subnet: 2001:3984:3990::/64

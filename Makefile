@@ -92,6 +92,7 @@ sclust: docker-compose.yaml
 .PHONY: dclust
 dclust: docker-compose.yaml 
 	$(DOCKER) compose down --remove-orphans 
+	rm -rf volumes/*-ssh
 
 .PHONEY: lclust
 lclust: 

@@ -1,6 +1,6 @@
 ARG VARIANT="latest"
 ARG IMAGE="heisengarg/devbox"
-ARG USER="heisengarg"
+ARG USER=heisengarg
 
 FROM quay.io/iovisor/bpftrace:latest as bpfsource
 
@@ -19,11 +19,13 @@ RUN  wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.10.25.tar.xz \
 
 FROM ${IMAGE}:${VARIANT}
 
-WORKDIR /home/${USER}/comdb2
+WORKDIR /home/heisengarg/comdb2
 
 ENV PATH $PATH:/opt/bb/bin
 
-RUN sudo apt-get update && sudo apt-get -y install --no-install-recommends \ 
+USER root
+
+RUN apt-get update && apt-get -y install --no-install-recommends \
     bison \
     build-essential      \
     cmake                \
@@ -55,7 +57,10 @@ RUN sudo apt-get update && sudo apt-get -y install --no-install-recommends \
 COPY --from=bpfsource /usr/bin/bpftrace /usr/bin/bpftrace
 COPY --from=perfsource /home/heisengarg/linux-5.10.25/tools/perf/perf /usr/bin/perf
 
-RUN sudo service ssh restart 
+USER heisengarg
+
+RUN sudo mkdir -p $HOME/.ssh && sudo chown -R $(whoami) $HOME/.ssh \
+    && sudo chmod 755 $HOME/.ssh && sudo service ssh restart
 
 EXPOSE 5105 
 COPY ./entrypoint.sh /usr/local/bin/
