@@ -8,13 +8,20 @@ FROM ${IMAGE}:${VARIANT} as perfsource
 
 USER root
 
+# libelf-dev for perf probe
+# libdbw-dev for perf DWARF
 RUN apt-get update &&  apt-get -y install --no-install-recommends \
-    wget bison flex xz-utils
+    libelf-dev libbfd-dev libcap-dev libnuma-dev \
+    libunwind-dev libzstd-dev libssl-dev \
+    systemtap-sdt-dev libslang2-dev libperl-dev \
+    libiberty-dev libbabeltrace-dev \
+    libdw-dev \
+    wget bison flex xz-utils 
 
 RUN  wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.10.25.tar.xz \
      && tar -xf linux-5.10.25.tar.xz \
      && cd linux-5.10.25/tools/perf \
-     && make -j 8 -C . \
+     && make -j 16 -C . \
      && make install
 
 FROM ${IMAGE}:${VARIANT}
