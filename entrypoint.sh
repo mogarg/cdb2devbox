@@ -232,6 +232,8 @@ EOF
 }
 
 sudo service ssh restart 2>&1 >/dev/null
+sudo sysctl -w kernel.randomize_va_space=0 2>&1 >/dev/null ||
+	echo "[WARNING] Not running in privileged mode. Address randomization is still enabled"
 
 case "$1" in
 build)

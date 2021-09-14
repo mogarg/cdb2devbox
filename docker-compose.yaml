@@ -2,9 +2,10 @@ version: "3.9"
 services:
   comdb2-node1:
     container_name: node1
-    hostname: node1 
+    hostname: node1
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg
+    privileged: true
     command: ["run", "mogargdb"]
     volumes:
       - ./volumes/bin:/opt/bb/bin
@@ -21,6 +22,7 @@ services:
     hostname: node2
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg
+    privileged: true
     command: ["run", "mogargdb"]
     volumes:
       - ./volumes/bin:/opt/bb/bin
@@ -37,6 +39,7 @@ services:
     hostname: node3
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg
+    privileged: true
     command: ["run", "mogargdb"]
     volumes:
       - ./volumes/bin:/opt/bb/bin
@@ -53,6 +56,7 @@ services:
     hostname: client
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg/src
+    privileged: true
     command: ["diskeys", "node1,node2,node3"]
     environment:
      - CLUSTER="node1 node2 node3"
@@ -79,7 +83,7 @@ networks:
       - subnet: 172.16.238.0/24
       - subnet: 2001:3984:3989::/64
   client-net:
-    driver: bridge 
+    driver: bridge
     enable_ipv6: true
     ipam:
       driver: default
