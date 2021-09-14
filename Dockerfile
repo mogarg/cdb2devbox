@@ -63,7 +63,9 @@ RUN sudo apt-get update && sudo apt-get -y install --no-install-recommends \
     figlet               \
     iputils-ping         \
     net-tools            \
-    sshpass
+    sshpass              \
+    clangd-12            \
+    exuberant-ctags
 
 # For perf
 RUN sudo apt-get update && sudo apt-get -y install --no-install-recommends \
