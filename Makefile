@@ -25,24 +25,24 @@ mkvol:
 
 .PHONY: runc
 runc: clean mkvol buildi
-	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
+	$(DOCKER) run -d --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
 		--cap-add=all \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source="$(SRCDIR)",target=$(CNTHOME)/comdb2,consistency=delegated \
 	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes \
 		-w $(CNTHOME) --hostname=$(CONTAINER) --name=$(CONTAINER)\
-	   	 -it $(IMAGE):$(VERSION) shell 
+	   	 -it $(IMAGE):$(VERSION) watch uptime && docker exec -it $(CONTAINER) zsh
 
 .PHONY: runs
 runs: clean mkvol
-	$(DOCKER) run --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
+	$(DOCKER) run -d --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
 		--privileged \
 		--mount type=volume,source=comdb2-src,target=$(CNTHOME)/comdb2 \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source="$(HOME)/.ssh",target=$(CNTHOME)/.ssh,consistency=cached \
 	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes \
 		-w $(CNTHOME) --hostname=$(CONTAINER) --name=$(CONTAINER)\
-	   	 -it $(IMAGE):$(VERSION) shell 
+	   	 -it $(IMAGE):$(VERSION) watch uptime && docker exec -it $(CONTAINER) zsh
 
 .PHONY: newdb
 newdb:
@@ -69,14 +69,14 @@ build:
 
 .PHONY: clust
 clust: mkvol 
-	$(DOCKER) run -it --mount type=volume,source=comdb2-dbs,target=$(CNTHOME)/dbs \
+	$(DOCKER) run -it --rm --mount type=volume,source=comdb2-dbs,target=$(CNTHOME)/dbs \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes,consistency=delegated \
 		-it $(IMAGE):$(VERSION) clust $(DBNAME) $(CLUSTHOSTS)
 
 .PHONY: clustbin
 clustbin: mkvol 
-	$(DOCKER) run -it --mount type=volume,source=comdb2-dbs,target=$(CNTHOME)/dbs \
+	$(DOCKER) run -it --rm --mount type=volume,source=comdb2-dbs,target=$(CNTHOME)/dbs \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes,consistency=delegated \
 		-it $(IMAGE):$(VERSION) clustbin $(DBNAME) $(CLUSTHOSTS)
@@ -93,6 +93,10 @@ sclust: docker-compose.yaml
 dclust: docker-compose.yaml 
 	$(DOCKER) compose down --remove-orphans 
 	rm -rf volumes/*-ssh
+
+.PHONY: cclust
+cclust:
+	$(DOCKER) exec -it client /bin/zsh
 
 .PHONEY: lclust
 lclust: 
