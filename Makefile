@@ -12,7 +12,7 @@ LCLVOLDIR="$(shell pwd)/volumes"
 LRLOPTSFILE="$(shell pwd)/lrl.options"
 
 # --- DB --- #
-CLUSTHOSTS="node1,node2,node3"
+CLUSTHOSTS="node1,node2,node3,node4,node5"
 DBNAME="mogargdb"
 
 .PHONY: buildi

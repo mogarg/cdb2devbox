@@ -14,7 +14,7 @@ services:
     networks:
       - cluster-net
       - client-net
-    restart: unless-stopped
+        #    restart: unless-stopped
     cap_add:
       - ALL
   comdb2-node2:
@@ -31,7 +31,7 @@ services:
     networks:
       - cluster-net
       - client-net
-    restart: unless-stopped
+        # restart: unless-stopped
     cap_add:
       - ALL
   comdb2-node3:
@@ -48,7 +48,41 @@ services:
     networks:
       - cluster-net
       - client-net
-    restart: unless-stopped
+        # restart: unless-stopped
+    cap_add:
+      - ALL
+  comdb2-node4:
+    container_name: node4
+    hostname: node4
+    image: heisengarg/comdb2-dev:latest
+    working_dir: /home/heisengarg
+    privileged: true
+    command: ["run", "mogargdb"]
+    volumes:
+      - ./volumes/bin:/opt/bb/bin
+      - ./volumes/node4-dbs:/home/heisengarg/dbs
+      - ./volumes/node4-ssh:/home/heisengarg/.ssh
+    networks:
+      - cluster-net
+      - client-net
+        # restart: unless-stopped
+    cap_add:
+      - ALL
+  comdb2-node5:
+    container_name: node5
+    hostname: node5
+    image: heisengarg/comdb2-dev:latest
+    working_dir: /home/heisengarg
+    privileged: true
+    command: ["run", "mogargdb"]
+    volumes:
+      - ./volumes/bin:/opt/bb/bin
+      - ./volumes/node5-dbs:/home/heisengarg/dbs
+      - ./volumes/node5-ssh:/home/heisengarg/.ssh
+    networks:
+      - cluster-net
+      - client-net
+        # restart: unless-stopped
     cap_add:
       - ALL
   comdb2-client:
@@ -57,9 +91,9 @@ services:
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg/src
     privileged: true
-    command: ["diskeys", "node1,node2,node3"]
+    command: ["diskeys", "node1,node2,node3,node4,node5"]
     environment:
-     - CLUSTER="node1 node2 node3"
+     - CLUSTER="node1 node2 node3,node4,node5"
     volumes:
       - comdb2-src:/home/heisengarg/src
       - ./volumes/bin:/opt/bb/bin
