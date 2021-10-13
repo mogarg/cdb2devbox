@@ -74,6 +74,9 @@ RUN sudo apt-get update && sudo apt-get -y install --no-install-recommends \
 COPY --from=bpfsource /usr/bin/bpftrace /usr/bin/bpftrace
 COPY --from=perfsource /home/heisengarg/linux-5.10.25/tools/perf/perf /usr/bin/perf
 
+# Hack! I should update my base image
+COPY ./.zsh_extras /home/heisengarg
+
 USER heisengarg
 
 RUN sudo mkdir -p $HOME/.ssh && sudo chown -R $(whoami) $HOME/.ssh \

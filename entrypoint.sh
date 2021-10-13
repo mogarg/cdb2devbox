@@ -15,6 +15,7 @@ HOMEDIR="/home/$USER/"
 DBSDIR="$HOMEDIR/dbs/"
 CLUSTVOLDIR="$HOMEDIR/volumes/" # directory to copy the database to when building a cluster
 DBNAME="testdb"
+COREDIR="/tmp/cores"
 
 # Environment for ssh
 # host password for the containers
@@ -231,9 +232,19 @@ EOF
 	[[ "$keep_running" != 0 ]] && watch uptime
 }
 
+enable_coredump() {
+	echo "Enabling core files"
+	ulimit -c unlimited && sudo mkdir "$COREDIR" && sudo chmod 777 "$COREDIR" &&
+		sudo sysctl -w kernel.core_pattern="$COREDIR/core.%e.%p.%h.%t" 2>&1 >/dev/null ||
+		echo "[WARNING] Not running in privileged mode. Couldn't set the core pattern"
+
+}
+
 sudo service ssh restart 2>&1 >/dev/null
 sudo sysctl -w kernel.randomize_va_space=0 2>&1 >/dev/null ||
 	echo "[WARNING] Not running in privileged mode. Address randomization is still enabled"
+
+enable_coredump
 
 case "$1" in
 build)

@@ -56,6 +56,10 @@ services:
     hostname: client
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg/src
+    depends_on:
+      - comdb2-node1
+      - comdb2-node2
+      - comdb2-node3
     privileged: true
     command: ["diskeys", "node1,node2,node3"]
     environment:

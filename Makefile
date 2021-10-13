@@ -27,6 +27,7 @@ mkvol:
 runc: clean mkvol buildi
 	$(DOCKER) run -d --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
 		--cap-add=all \
+		--privileged \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
 	   	--mount type=bind,source="$(SRCDIR)",target=$(CNTHOME)/comdb2,consistency=delegated \
 	   	--mount type=bind,source=$(LCLVOLDIR),target=$(CNTHOME)/volumes \
@@ -36,6 +37,7 @@ runc: clean mkvol buildi
 .PHONY: runs
 runs: clean mkvol
 	$(DOCKER) run -d --mount type=volume,source=comdb2-dbs,target="$(CNTHOME)/dbs" \
+		--cap-add=all \
 		--privileged \
 		--mount type=volume,source=comdb2-src,target=$(CNTHOME)/comdb2 \
 	   	--mount type=volume,source=comdb2-opt-bb,target=/opt/bb/ \
