@@ -6,7 +6,8 @@ services:
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg
     privileged: true
-    command: ["run", "mogargdb"]
+    command: ["tail", "-f","/dev/null"]
+      # command: ["run", "mogargdb"]
     volumes:
       - ./volumes/bin:/opt/bb/bin
       - ./volumes/node1-dbs:/home/heisengarg/dbs
@@ -23,7 +24,8 @@ services:
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg
     privileged: true
-    command: ["run", "mogargdb"]
+    command: ["tail", "-f","/dev/null"]
+      # command: ["run", "mogargdb"]
     volumes:
       - ./volumes/bin:/opt/bb/bin
       - ./volumes/node2-dbs:/home/heisengarg/dbs
@@ -40,7 +42,9 @@ services:
     image: heisengarg/comdb2-dev:latest
     working_dir: /home/heisengarg
     privileged: true
-    command: ["run", "mogargdb"]
+      #    command: ["tail", "-f","/dev/null"]
+    command: ["tail", "-f","/dev/null"]
+      # command: ["run", "mogargdb"]
     volumes:
       - ./volumes/bin:/opt/bb/bin
       - ./volumes/node3-dbs:/home/heisengarg/dbs

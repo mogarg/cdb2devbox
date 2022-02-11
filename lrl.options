@@ -1,1 +1,3 @@
 logmsg.level debug
+dtastripe 1
+enable_snapshot_isolation
